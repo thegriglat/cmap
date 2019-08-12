@@ -4,54 +4,21 @@
 #include "stdlib.h"
 #include "string.h"
 
-//murmur stuff
-
-#define mmix(h,k) { k *= m; k ^= k >> r; k *= m; h *= m; h ^= k; }
-
-static unsigned int MurmurHash2A ( const void *key, int len, unsigned int seed )
+static unsigned int DJBHash(const char* str, unsigned int length)
 {
-    const unsigned int m = 0x5bd1e995;
-    const int r = 24;
-    unsigned int l = len;
+    unsigned int hash = 5381;
+    unsigned int i    = 0;
 
-    const unsigned char *data = (const unsigned char *)key;
-
-    unsigned int h = seed;
-    unsigned int k;
-
-    while(len >= 4) {
-        k = *(unsigned int *)data;
-
-        mmix(h, k);
-
-        data += 4;
-        len -= 4;
+    for (i = 0; i < length; ++str, ++i) {
+        hash = ((hash << 5) + hash) + (*str);
     }
 
-    unsigned int t = 0;
-
-    switch(len) {
-    case 3:
-        t ^= data[2] << 16;
-    case 2:
-        t ^= data[1] << 8;
-    case 1:
-        t ^= data[0];
-    };
-
-    mmix(h, t);
-    mmix(h, l);
-
-    h ^= h >> 13;
-    h *= m;
-    h ^= h >> 15;
-
-    return h;
-};
+    return hash;
+}
 
 static unsigned int cmap_get_hash(char* key)
 {
-    return MurmurHash2A(key, strlen(key), 0);
+    return DJBHash(key, strlen(key));
 }
 
 struct node {
