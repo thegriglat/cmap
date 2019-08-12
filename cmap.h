@@ -22,23 +22,19 @@ static unsigned int cmap_get_hash(char* key)
 }
 
 struct node {
-    struct node *one, *zero;
+    struct node *(child[2]);
     void *value;
 } ;
 
 typedef struct node CMap;
 
-static CMap *cmap_newnode(CMap *parent, char bit)
+static CMap *cmap_newnode(CMap *parent, int bit)
 {
     CMap *newnode = (CMap *)malloc(sizeof(CMap));
-    newnode->one = newnode->zero = NULL;
+    newnode->child[0] = newnode->child[1] = NULL;
     newnode->value = NULL;
     if (parent) {
-        if (bit) {
-            parent->one = newnode;
-        } else {
-            parent->zero = newnode;
-        }
+        parent->child[bit] = newnode;
     };
     return newnode;
 }
@@ -50,12 +46,10 @@ CMap *cmap_init()
 
 void cmap_free(CMap *map)
 {
-    if (map->one) {
-        cmap_free(map->one);
-    }
-    if (map->zero) {
-        cmap_free(map->zero);
-    }
+    int i;
+    for (i = 0; i < 2; ++i)
+        if (map->child[i])
+            cmap_free(map->child[i]);
     if (map) {
         free(map);
     }
@@ -71,18 +65,11 @@ CMap *cmap_add(CMap *root, char *key, void *value)
     int i = sizeof(unsigned int) * 8 - 1;
     for (; i >= 0; --i) {
         // iterating over bits
-        const char bit = (hash >> i) & 1;
-        if (bit) {
-            if (!no->one) {
-                no->one = cmap_newnode(no, bit);
-            };
-            no = no->one;
-        } else {
-            if (!no->zero) {
-                no->zero = cmap_newnode(no, bit);
-            }
-            no = no->zero;
+        const int bit = (hash >> i) & 1;
+        if (!no->child[bit]) {
+            no->child[bit] = cmap_newnode(no, bit);
         }
+        no = no->child[bit];
     }
     no->value = value;
     return root;
@@ -97,20 +84,11 @@ void *cmap_get(CMap *root, char *key)
     CMap *no = root;
     int i = sizeof(unsigned int) * 8 - 1;
     for (; i >= 0; --i) {
-        const char bit = (hash >> i) & 1;
-        if (bit) {
-            if (no->one) {
-                no = no->one;
-            } else {
-                return NULL;
-            }
-        } else {
-            if (no->zero) {
-                no = no->zero;
-            } else {
-                return NULL;
-            }
-        }
+        const int bit = (hash >> i) & 1;
+        if (no->child[bit])
+            no = no->child[bit];
+        else
+            return NULL;
     }
     return no->value;
 }
