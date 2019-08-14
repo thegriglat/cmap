@@ -24,18 +24,18 @@ static unsigned int cmap_get_hash(char* key)
     return DJBHash(key, strlen(key));
 }
 
-struct node {
-    struct node *(child[2]);
+union node {
+    union node *(child[2]);
     void *value;
-} ;
+};
 
-typedef struct node CMap;
+
+typedef union node CMap;
 
 static CMap *cmap_newnode(CMap *parent, int bit)
 {
     CMap *newnode = (CMap *)malloc(sizeof(CMap));
     newnode->child[0] = newnode->child[1] = NULL;
-    newnode->value = NULL;
     if (parent) {
         parent->child[bit] = newnode;
     };
@@ -50,9 +50,10 @@ CMap *cmap_init()
 void cmap_free(CMap *map)
 {
     int i;
-    for (i = 0; i < 2; ++i)
-        if (map->child[i])
-            cmap_free(map->child[i]);
+    if (!map->value)
+        for (i = 0; i < 2; ++i)
+            if (map->child[i])
+                cmap_free(map->child[i]);
     if (map) {
         free(map);
     }
