@@ -3,6 +3,9 @@
 
 #include "stdlib.h"
 #include "string.h"
+#include "limits.h"
+
+#define MAX_UINTBITS (sizeof(unsigned int) * CHAR_BIT)
 
 static unsigned int DJBHash(const char* str, unsigned int length)
 {
@@ -62,7 +65,7 @@ CMap *cmap_add(CMap *root, char *key, void *value)
         root = cmap_init();
     }
     CMap *no = root;
-    int i = sizeof(unsigned int) * 8 - 1;
+    int i = MAX_UINTBITS - 1;
     for (; i >= 0; --i) {
         // iterating over bits
         const int bit = (hash >> i) & 1;
@@ -82,7 +85,7 @@ void *cmap_get(CMap *root, char *key)
     }
     const unsigned int hash = cmap_get_hash(key);
     CMap *no = root;
-    int i = sizeof(unsigned int) * 8 - 1;
+    int i = MAX_UINTBITS - 1;
     for (; i >= 0; --i) {
         const int bit = (hash >> i) & 1;
         if (no->child[bit])
