@@ -59,9 +59,9 @@ void cmap_free(CMap *map)
     }
 }
 
-CMap *cmap_add(CMap *root, char *key, void *value)
+
+CMap *cmap_add_uint(CMap *root, const unsigned int hash, void *value)
 {
-    const unsigned int hash = cmap_get_hash(key);
     if (!root) {
         root = cmap_init();
     }
@@ -79,12 +79,17 @@ CMap *cmap_add(CMap *root, char *key, void *value)
     return root;
 }
 
-void *cmap_get(CMap *root, char *key)
+CMap* cmap_add_char(CMap *root, char* key, void *value){
+    return cmap_add_uint(root, cmap_get_hash(key), value);
+}
+
+
+void *cmap_get_uint(CMap *root, const unsigned int hash)
 {
     if (!root) {
         return NULL;
     }
-    const unsigned int hash = cmap_get_hash(key);
+    // const unsigned int hash = cmap_get_hash(key);
     CMap *no = root;
     int i = MAX_UINTBITS - 1;
     for (; i >= 0; --i) {
@@ -96,5 +101,18 @@ void *cmap_get(CMap *root, char *key)
     }
     return no->value;
 }
+
+void *cmap_get_char(CMap* map, char*key){
+    return cmap_get_uint(map, cmap_get_hash(key));
+}   
+
+#ifndef CMAP_UINT
+    #define cmap_add cmap_add_char
+    #define cmap_get cmap_get_char
+#else
+    #define cmap_add cmap_add_uint
+    #define cmap_get cmap_get_uint
+#endif
+
 
 #endif
